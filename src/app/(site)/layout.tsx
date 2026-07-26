@@ -63,9 +63,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <header className="border-b border-ink/10 sticky top-0 bg-paper/90 backdrop-blur z-40 h-[65px]">
+      <header className="sticky top-0 z-50 h-[65px] bg-paper/80 backdrop-blur-md border-b border-ink/5 transition-all duration-300">
         <nav className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
           <Link href="/" className="hover:opacity-80 transition-opacity">
             <Logo />
