@@ -3,8 +3,10 @@ import AdminChrome from "@/components/AdminChrome";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
-      <AdminChrome>{children}</AdminChrome>
-    </AuthProvider>
+    <div className="admin-scope min-h-screen bg-paper text-ink">
+      <AuthProvider>
+        <AdminChrome>{children}</AdminChrome>
+      </AuthProvider>
+    </div>
   );
 }

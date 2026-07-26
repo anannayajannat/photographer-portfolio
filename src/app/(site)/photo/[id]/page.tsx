@@ -1,4 +1,4 @@
-import { eq, and, ne, desc, sql } from "drizzle-orm";
+import { eq, and, ne, desc, sql, notInArray } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -37,12 +37,27 @@ async function getAsset(id: string): Promise<(PublicAsset & { viewCount: number;
 }
 
 async function getRelated(category: string, excludeId: string): Promise<PublicAsset[]> {
-  const rows = await db
+  // 1. Try to get photos from the exact same category
+  let rows = await db
     .select()
     .from(schema.assets)
     .where(and(eq(schema.assets.category, category), ne(schema.assets.id, excludeId)))
     .orderBy(desc(schema.assets.createdAt))
     .limit(6);
+
+  // 2. FALLBACK: Fill gaps with recent uploads if we have less than 6
+  if (rows.length < 6) {
+    const existingIds = [...rows.map((r) => r.id), excludeId];
+    
+    const fallbackRows = await db
+      .select()
+      .from(schema.assets)
+      .where(notInArray(schema.assets.id, existingIds))
+      .orderBy(desc(schema.assets.createdAt))
+      .limit(6 - rows.length);
+      
+    rows = [...rows, ...fallbackRows];
+  }
 
   return rows.map((a) => ({
     id: a.id,
