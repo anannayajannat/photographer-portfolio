@@ -99,3 +99,17 @@ export const services = pgTable(
     sortIdx: index("services_sort_idx").on(table.sortOrder),
   })
 );
+
+export const aboutImages = pgTable(
+  "about_images",
+  {
+    id: text("id").primaryKey().$defaultFn(() => createId()),
+    imagePublicId: text("image_public_id").notNull(),
+    caption: text("caption"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    sortIdx: index("about_images_sort_idx").on(table.sortOrder),
+  })
+);

@@ -6,8 +6,11 @@ import { useRouter } from "next/navigation";
 interface FileRow {
   file: File;
   title: string;
+  savedTitle: string; // last title actually persisted to the server — diverges from `title` while editing
+  assetId: string | null; // set once the upload succeeds, needed to PATCH a rename afterward
   progress: number;
   status: "pending" | "uploading" | "done" | "error";
+  renameStatus: "idle" | "saving" | "saved" | "error";
   error?: string;
 }
 
@@ -26,12 +29,18 @@ export default function AdminUploadPage() {
 
   function handleFilesSelected(fileList: FileList | null) {
     if (!fileList) return;
-    const newRows: FileRow[] = Array.from(fileList).map((file) => ({
-      file,
-      title: titleFromFilename(file.name),
-      progress: 0,
-      status: "pending",
-    }));
+    const newRows: FileRow[] = Array.from(fileList).map((file) => {
+      const title = titleFromFilename(file.name);
+      return {
+        file,
+        title,
+        savedTitle: title,
+        assetId: null,
+        progress: 0,
+        status: "pending",
+        renameStatus: "idle",
+      };
+    });
     setRows((prev) => [...prev, ...newRows]);
   }
 
@@ -71,7 +80,11 @@ export default function AdminUploadPage() {
       };
       xhr.onload = () => {
         if (xhr.status === 201) {
-          updateRow(index, { status: "done", progress: 100 });
+          let assetId: string | null = null;
+          try {
+            assetId = JSON.parse(xhr.responseText).id ?? null;
+          } catch {}
+          updateRow(index, { status: "done", progress: 100, assetId, savedTitle: row.title });
         } else {
           let msg = "Upload failed.";
           try {
@@ -87,6 +100,36 @@ export default function AdminUploadPage() {
       };
       xhr.send(formData);
     });
+  }
+
+  // Renaming after the fact reuses the same full-metadata PUT the standalone
+  // edit page uses — the API only accepts a complete metadata object, not a
+  // partial patch, so this resends the category/pricing this batch already
+  // used alongside the corrected title.
+  async function handleRename(index: number, row: FileRow) {
+    if (!row.assetId || row.title === row.savedTitle) return;
+    updateRow(index, { renameStatus: "saving" });
+
+    const body = {
+      title: row.title,
+      category,
+      tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+      pricingMode,
+      priceCents: pricingMode === "PAID" ? Math.round(parseFloat(price || "0") * 100) : 0,
+    };
+
+    const res = await fetch(`/api/assets/${row.assetId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      updateRow(index, { renameStatus: "saved", savedTitle: row.title });
+      setTimeout(() => updateRow(index, { renameStatus: "idle" }), 1500);
+    } else {
+      updateRow(index, { renameStatus: "error" });
+    }
   }
 
   async function handleUploadAll() {
@@ -156,8 +199,8 @@ export default function AdminUploadPage() {
           )}
         </div>
         <p className="text-xs text-black/40">
-          Same category/pricing applies to every file below. Fix individual titles here, or edit any
-          asset's other fields afterward.
+          Same category/pricing applies to every file below. Titles can be renamed both before and
+          after upload.
         </p>
       </div>
 
@@ -172,50 +215,74 @@ export default function AdminUploadPage() {
       {rows.length > 0 && (
         <div className="flex flex-col gap-3 mb-6">
           <p className="text-xs text-black/40">
-            Titles are auto-filled from each file name — edit any of them below before uploading.
+            Titles are auto-filled from each file name — edit any of them, before or after upload.
           </p>
-          {rows.map((row, i) => (
-            <div key={i} className="border border-black/10 rounded-lg p-3">
-              <div className="flex items-center gap-3">
-                <input
-                  aria-label="Photo title"
-                  value={row.title}
-                  onChange={(e) => updateRow(i, { title: e.target.value })}
-                  disabled={row.status === "uploading" || row.status === "done"}
-                  className="border border-black/20 rounded-md px-2 py-1 text-sm flex-1"
-                />
-                <span className="text-xs text-black/40 w-20 truncate">{row.file.name}</span>
-                {row.status === "pending" && (
-                  <button
-                    type="button"
-                    onClick={() => removeRow(i)}
-                    className="text-xs text-red-600 hover:underline"
-                  >
-                    Remove
-                  </button>
-                )}
-                {row.status === "done" && <span className="text-xs text-green-700">✓ Uploaded</span>}
-                {row.status === "error" && (
-                  <button
-                    type="button"
-                    onClick={() => uploadOne(i, row)}
-                    className="text-xs text-red-600 hover:underline"
-                  >
-                    Retry
-                  </button>
-                )}
-              </div>
-              {row.status === "uploading" && (
-                <div className="w-full bg-black/10 rounded-full h-1.5 mt-2">
-                  <div
-                    className="bg-ink h-1.5 rounded-full transition-all"
-                    style={{ width: `${row.progress}%` }}
+          {rows.map((row, i) => {
+            const isDirty = row.status === "done" && row.title !== row.savedTitle;
+            return (
+              <div key={i} className="border border-black/10 rounded-lg p-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    aria-label="Photo title"
+                    value={row.title}
+                    onChange={(e) => updateRow(i, { title: e.target.value })}
+                    disabled={row.status === "uploading"}
+                    className="border border-black/20 rounded-md px-2 py-1 text-sm flex-1"
                   />
+                  <span className="text-xs text-black/40 w-20 truncate">{row.file.name}</span>
+
+                  {row.status === "pending" && (
+                    <button
+                      type="button"
+                      onClick={() => removeRow(i)}
+                      className="text-xs text-red-600 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+
+                  {row.status === "done" && isDirty && (
+                    <button
+                      type="button"
+                      onClick={() => handleRename(i, row)}
+                      disabled={row.renameStatus === "saving"}
+                      className="text-xs bg-ink text-white px-2.5 py-1 rounded-md disabled:opacity-50"
+                    >
+                      {row.renameStatus === "saving" ? "Saving…" : "Save title"}
+                    </button>
+                  )}
+                  {row.status === "done" && !isDirty && row.renameStatus === "saved" && (
+                    <span className="text-xs text-green-700">✓ Saved</span>
+                  )}
+                  {row.status === "done" && !isDirty && row.renameStatus === "idle" && (
+                    <span className="text-xs text-green-700">✓ Uploaded</span>
+                  )}
+                  {row.renameStatus === "error" && (
+                    <span className="text-xs text-red-600">Rename failed — try again</span>
+                  )}
+
+                  {row.status === "error" && (
+                    <button
+                      type="button"
+                      onClick={() => uploadOne(i, row)}
+                      className="text-xs text-red-600 hover:underline"
+                    >
+                      Retry
+                    </button>
+                  )}
                 </div>
-              )}
-              {row.status === "error" && <p className="text-xs text-red-600 mt-1">{row.error}</p>}
-            </div>
-          ))}
+                {row.status === "uploading" && (
+                  <div className="w-full bg-black/10 rounded-full h-1.5 mt-2">
+                    <div
+                      className="bg-ink h-1.5 rounded-full transition-all"
+                      style={{ width: `${row.progress}%` }}
+                    />
+                  </div>
+                )}
+                {row.status === "error" && <p className="text-xs text-red-600 mt-1">{row.error}</p>}
+              </div>
+            );
+          })}
         </div>
       )}
 

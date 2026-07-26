@@ -1,12 +1,22 @@
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import Reveal from "@/components/Reveal";
+import AboutSlider from "@/components/AboutSlider";
+import { previewUrl } from "@/lib/cloudinary";
 
 export const dynamic = "force-dynamic"; // see README: avoids a build-time DB dependency from ISR prerendering
 
 export default async function AboutPage() {
-  const [row] = await db.select().from(schema.siteContent).where(eq(schema.siteContent.key, "about"));
-  const value = (row?.value as { heading?: string; body?: string }) ?? {};
+  const [contentRow, imageRows] = await Promise.all([
+    db.select().from(schema.siteContent).where(eq(schema.siteContent.key, "about")).then((r) => r[0]),
+    db.select().from(schema.aboutImages).orderBy(asc(schema.aboutImages.sortOrder)),
+  ]);
+  const value = (contentRow?.value as { heading?: string; body?: string }) ?? {};
+  const images = imageRows.map((img) => ({
+    id: img.id,
+    caption: img.caption,
+    imageUrl: previewUrl(img.imagePublicId),
+  }));
 
   return (
     <div>
@@ -18,6 +28,14 @@ export default async function AboutPage() {
           </Reveal>
         </div>
       </div>
+
+      {images.length > 0 && (
+        <div className="max-w-3xl mx-auto px-6 pt-14">
+          <Reveal>
+            <AboutSlider images={images} />
+          </Reveal>
+        </div>
+      )}
 
       <div className="max-w-2xl mx-auto px-6 py-16">
         {value.body ? (

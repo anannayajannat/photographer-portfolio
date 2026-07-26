@@ -15,6 +15,13 @@
       "when": 1785061907712,
       "tag": "0001_huge_sentinels",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785070113321,
+      "tag": "0002_romantic_santa_claus",
+      "breakpoints": true
     }
   ]
 }

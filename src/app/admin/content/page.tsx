@@ -136,6 +136,15 @@ export default function AdminContentPage() {
             rows={6}
             className="border border-black/20 rounded-md px-3 py-2 text-sm"
           />
+          {active === "about" && (
+            <p className="text-xs text-black/40">
+              To add or manage the photo slideshow on your About page, go to{" "}
+              <Link href="/admin/about-photos" className="underline">
+                About photos
+              </Link>{" "}
+              in the sidebar.
+            </p>
+          )}
           {active === "contact" && (
             <>
               <input

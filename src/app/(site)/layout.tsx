@@ -26,14 +26,45 @@ async function getSocialLinks(): Promise<SocialLinks> {
   return (row?.value as SocialLinks) ?? {};
 }
 
+async function getContactInfo(): Promise<{ email?: string; phone?: string }> {
+  const [row] = await db.select().from(schema.siteContent).where(eq(schema.siteContent.key, "contact"));
+  const value = (row?.value as { email?: string; phone?: string }) ?? {};
+  return { email: value.email, phone: value.phone };
+}
+
 export const dynamic = "force-dynamic"; // see README: avoids a build-time DB dependency
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const social = await getSocialLinks();
+  const [social, contact] = await Promise.all([getSocialLinks(), getContactInfo()]);
   const activeSocials = SOCIAL_ICONS.filter(({ key }) => social[key]);
+  const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
+  // Structured data built from the same content already set in the admin
+  // dashboard — not hardcoded placeholder business details. Helps Google
+  // understand this as a real photography business (name, contact, social
+  // profiles) rather than an anonymous page; this is the kind of thing
+  // that costs nothing to include and does real work for a storefront's
+  // actual business goal (getting found), so it's worth doing even though
+  // it's invisible in the UI.
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    name: "Photographer Portfolio",
+    url: baseUrl,
+    ...(contact.email && { email: contact.email }),
+    ...(contact.phone && { telephone: contact.phone }),
+    ...(activeSocials.length > 0 && {
+      sameAs: activeSocials.map(({ key }) => social[key]).filter(Boolean),
+    }),
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <header className="border-b border-ink/10 sticky top-0 bg-paper/90 backdrop-blur z-40 h-[65px]">
         <nav className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
           <Link href="/" className="hover:opacity-80 transition-opacity">
