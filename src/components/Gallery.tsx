@@ -28,7 +28,7 @@ export default function Gallery({ assets }: { assets: PublicAsset[] }) {
             className={`px-4 py-1.5 rounded-full text-sm border ${
               category === c
                 ? "bg-ink text-white border-ink"
-                : "border-black/15 text-black/70 hover:border-black/40"
+                : "border-ink/15 text-ink/70 hover:border-ink/40"
             }`}
           >
             {c}
@@ -37,7 +37,7 @@ export default function Gallery({ assets }: { assets: PublicAsset[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-black/50 text-sm">No images in this category yet.</p>
+        <p className="text-ink/50 text-sm">No images in this category yet.</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {filtered.map((asset, i) => (

@@ -93,17 +93,18 @@ export default async function PhotoPage({ params }: { params: { id: string } }) 
   const related = await getRelated(asset.category, asset.id);
   const hasDimensions = Boolean(asset.originalWidth && asset.originalHeight);
 
-  // Fire-and-forget server-side view increment
-  Promise.resolve().then(async () => {
-    try {
-      await db
-        .update(schema.assets)
-        .set({ viewCount: sql`${schema.assets.viewCount} + 1` })
-        .where(eq(schema.assets.id, asset.id));
-    } catch (err) {
-      // Fail silently to not disrupt the user experience
-    }
-  });
+  // Awaited (not fire-and-forget): on Vercel's serverless runtime, an
+  // unawaited promise isn't guaranteed to finish after the response is
+  // sent — the function can be frozen first, silently dropping the
+  // increment. It's a single indexed UPDATE, cheap enough to just await.
+  try {
+    await db
+      .update(schema.assets)
+      .set({ viewCount: sql`${schema.assets.viewCount} + 1` })
+      .where(eq(schema.assets.id, asset.id));
+  } catch {
+    // Non-critical — a missed view count shouldn't break the page.
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-5 sm:px-6 py-8 sm:py-10">
@@ -165,9 +166,9 @@ export default async function PhotoPage({ params }: { params: { id: string } }) 
                 <Link
                   key={r.id}
                   href={`/photo/${r.id}`}
-                  className="group flex gap-3 rounded-md hover:bg-black/[0.03] p-1 -m-1 transition-colors"
+                  className="group flex gap-3 rounded-md hover:bg-ink/[0.03] p-1 -m-1 transition-colors"
                 >
-                  <div className="relative w-20 h-20 shrink-0 overflow-hidden rounded-md bg-black/5">
+                  <div className="relative w-20 h-20 shrink-0 overflow-hidden rounded-md bg-ink/5">
                     <Image
                       src={r.previewUrl}
                       alt={r.title}

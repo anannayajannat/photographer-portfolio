@@ -20,8 +20,8 @@ export default async function AboutPage() {
 
   return (
     <div>
-      <div className="border-b border-ink/10 bg-white/40">
-        <div className="max-w-3xl mx-auto px-6 pt-20 pb-16 text-center">
+      <div className="border-b border-ink/10 bg-paper/60">
+        <div className="max-w-2xl mx-auto px-6 pt-20 pb-16 text-center">
           <Reveal>
             <p className="text-xs tracking-[0.3em] uppercase text-graphite mb-3">The Studio</p>
             <h1 className="font-serif text-4xl md:text-5xl text-ink">{value.heading ?? "About"}</h1>
@@ -30,7 +30,7 @@ export default async function AboutPage() {
       </div>
 
       {images.length > 0 && (
-        <div className="max-w-3xl mx-auto px-6 pt-14">
+        <div className="max-w-2xl mx-auto px-6 pt-14">
           <Reveal>
             <AboutSlider images={images} />
           </Reveal>

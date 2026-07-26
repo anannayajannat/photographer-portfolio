@@ -43,7 +43,7 @@ export default async function ServiceDetailPage({ params }: { params: { slug: st
 
       <Reveal>
         {service.imagePublicId && (
-          <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden bg-black/5 mt-6 mb-8">
+          <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden bg-ink/5 mt-6 mb-8">
             <Image
               src={previewUrl(service.imagePublicId)}
               alt={service.title}

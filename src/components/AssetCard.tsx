@@ -24,7 +24,7 @@ export default function AssetCard({
         e.preventDefault();
         onClick();
       }}
-      className="group relative aspect-[4/5] overflow-hidden rounded-md bg-black/5 block"
+      className="group relative aspect-[4/5] overflow-hidden rounded-md bg-ink/5 block"
     >
       <Image
         src={asset.previewUrl}

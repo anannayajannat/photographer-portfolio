@@ -16,7 +16,7 @@ export default async function ServicesPage() {
 
   return (
     <div>
-      <div className="border-b border-ink/10 bg-white/40">
+      <div className="border-b border-ink/10 bg-paper/60">
         <div className="max-w-3xl mx-auto px-6 pt-20 pb-16 text-center">
           <Reveal>
             <p className="text-xs tracking-[0.3em] uppercase text-graphite mb-3">What I Offer</p>
@@ -38,7 +38,7 @@ export default async function ServicesPage() {
                   className="group block border border-ink/10 rounded-lg overflow-hidden h-full hover:border-ink/30 hover:shadow-sm transition-all"
                 >
                   {s.imagePublicId ? (
-                    <div className="relative aspect-[16/9] bg-black/5 overflow-hidden">
+                    <div className="relative aspect-[16/9] bg-ink/5 overflow-hidden">
                       <Image
                         src={previewUrl(s.imagePublicId)}
                         alt={s.title}

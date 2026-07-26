@@ -12,7 +12,7 @@ export default async function ContactPage() {
 
   return (
     <div>
-      <div className="border-b border-ink/10 bg-white/40">
+      <div className="border-b border-ink/10 bg-paper/60">
         <div className="max-w-3xl mx-auto px-6 pt-20 pb-16 text-center">
           <Reveal>
             <p className="text-xs tracking-[0.3em] uppercase text-graphite mb-3">Get In Touch</p>

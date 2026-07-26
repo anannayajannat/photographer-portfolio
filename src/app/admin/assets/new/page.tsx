@@ -221,15 +221,18 @@ export default function AdminUploadPage() {
             const isDirty = row.status === "done" && row.title !== row.savedTitle;
             return (
               <div key={i} className="border border-black/10 rounded-lg p-3">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                   <input
                     aria-label="Photo title"
                     value={row.title}
                     onChange={(e) => updateRow(i, { title: e.target.value })}
                     disabled={row.status === "uploading"}
-                    className="border border-black/20 rounded-md px-2 py-1 text-sm flex-1"
+                    className="border border-black/20 rounded-md px-3 py-2 text-sm flex-1 min-w-0"
                   />
-                  <span className="text-xs text-black/40 w-20 truncate">{row.file.name}</span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-xs text-black/40 truncate max-w-[140px]" title={row.file.name}>
+                      {row.file.name}
+                    </span>
 
                   {row.status === "pending" && (
                     <button
@@ -270,6 +273,7 @@ export default function AdminUploadPage() {
                       Retry
                     </button>
                   )}
+                  </div>
                 </div>
                 {row.status === "uploading" && (
                   <div className="w-full bg-black/10 rounded-full h-1.5 mt-2">

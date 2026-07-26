@@ -86,12 +86,12 @@ export default function Lightbox({
               <h3 id="lightbox-title" className="text-xl font-semibold">
                 {asset.title}
               </h3>
-              <p className="text-sm text-black/60">{asset.category}</p>
+              <p className="text-sm text-ink/60">{asset.category}</p>
             </div>
             <div className="flex items-center gap-3">
               <Link
                 href={`/photo/${asset.id}`}
-                className="text-xs text-black/50 hover:text-black underline"
+                className="text-xs text-ink/50 hover:text-black underline"
                 title="Permalink to this photo"
               >
                 Share
@@ -100,13 +100,13 @@ export default function Lightbox({
                 ref={closeButtonRef}
                 onClick={onClose}
                 aria-label="Close"
-                className="text-sm text-black/50 hover:text-black"
+                className="text-sm text-ink/50 hover:text-ink"
               >
                 Close ✕
               </button>
             </div>
           </div>
-          {asset.description && <p className="text-sm text-black/70">{asset.description}</p>}
+          {asset.description && <p className="text-sm text-ink/70">{asset.description}</p>}
 
           <PurchasePanel asset={asset} />
         </div>

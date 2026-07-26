@@ -37,16 +37,16 @@ export default async function CheckoutSuccessPage({
   return (
     <div className="max-w-md mx-auto px-6 py-24 text-center">
       <h1 className="text-2xl font-semibold mb-2">Thank you!</h1>
-      <p className="text-black/60 text-sm mb-2">
+      <p className="text-ink/60 text-sm mb-2">
         Your purchase of <strong>{asset?.title}</strong> is confirmed.
       </p>
-      <p className="text-black/40 text-xs mb-8">A copy of this link was also emailed to {order.buyerEmail}.</p>
+      <p className="text-ink/40 text-xs mb-8">A copy of this link was also emailed to {order.buyerEmail}.</p>
       <DownloadButton downloadUrl={downloadUrl} />
-      <p className="text-black/40 text-xs mt-4">This link expires in 1 hour.</p>
+      <p className="text-ink/40 text-xs mt-4">This link expires in 1 hour.</p>
     </div>
   );
 }
 
 function Message({ text }: { text: string }) {
-  return <div className="max-w-md mx-auto px-6 py-24 text-center text-black/60">{text}</div>;
+  return <div className="max-w-md mx-auto px-6 py-24 text-center text-ink/60">{text}</div>;
 }

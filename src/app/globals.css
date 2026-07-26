@@ -2,10 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Space-separated R G B channels (not hex, not comma-separated) — the
+     format Tailwind's rgb(var(--x) / <alpha-value>) pattern requires. */
+  --color-ink: 17 17 17;            /* #111111 */
+  --color-paper: 250 250 250;       /* #fafafa */
+  --color-graphite: 63 63 63;       /* #3f3f3f */
+  --color-graphite-light: 107 107 107; /* #6b6b6b */
+}
+
+.dark {
+  --color-ink: 237 237 237;         /* near-white text/borders on dark bg */
+  --color-paper: 18 18 18;          /* near-black background */
+  --color-graphite: 176 176 176;
+  --color-graphite-light: 138 138 138;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-paper text-ink;
+  @apply bg-paper text-ink transition-colors duration-200;
 }

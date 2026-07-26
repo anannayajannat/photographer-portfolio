@@ -128,7 +128,7 @@ export default function AboutSlider({
             aria-roledescription="slide"
             aria-label={`${i + 1} of ${images.length}`}
           >
-            <div className="relative w-full aspect-[4/3] sm:aspect-[4/5] rounded-lg overflow-hidden bg-black/5">
+            <div className="relative w-full aspect-[4/3] sm:aspect-[4/5] rounded-lg overflow-hidden bg-ink/5">
               <Image
                 src={img.imageUrl}
                 alt={img.caption ?? "Studio photo"}

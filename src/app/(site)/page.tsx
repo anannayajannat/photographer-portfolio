@@ -103,7 +103,7 @@ export default async function HomePage() {
       </div>
 
       {/* NEW Split-Screen About Preview */}
-      <section id="about" className="border-t border-ink/10 bg-white/40 scroll-mt-16 overflow-hidden">
+      <section id="about" className="border-t border-ink/10 bg-paper/60 scroll-mt-16 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 py-24">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
             
@@ -148,7 +148,7 @@ export default async function HomePage() {
                 </Reveal>
               ) : (
                 <Reveal>
-                  <div className="aspect-[4/5] bg-black/5 flex items-center justify-center rounded-md">
+                  <div className="aspect-[4/5] bg-ink/5 flex items-center justify-center rounded-md">
                     <p className="text-ink/40 text-sm">No images uploaded yet.</p>
                   </div>
                 </Reveal>
