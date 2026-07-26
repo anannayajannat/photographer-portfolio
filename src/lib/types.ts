@@ -8,5 +8,6 @@ export interface PublicAsset {
   priceCents: number;
   previewUrl: string;
   downloadCount: number;
+  featured: boolean;
   createdAt: string;
 }

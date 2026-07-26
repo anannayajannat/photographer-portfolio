@@ -1,4 +1,4 @@
-import { eq, and, ne, desc } from "drizzle-orm";
+import { eq, and, ne, desc, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,12 +7,15 @@ import { db, schema } from "@/lib/db";
 import { previewUrl } from "@/lib/cloudinary";
 import PurchasePanel from "@/components/PurchasePanel";
 import { PublicAsset } from "@/lib/types";
+import LikeButton from "@/components/LikeButton";
 
-export const dynamic = "force-dynamic"; // same reasoning as the other DB-backed pages — see README
+export const dynamic = "force-dynamic";
 
-async function getAsset(id: string): Promise<PublicAsset | null> {
+// Extended the return type to include the new columns without breaking your existing PublicAsset type
+async function getAsset(id: string): Promise<(PublicAsset & { viewCount: number; likeCount: number }) | null> {
   const [a] = await db.select().from(schema.assets).where(eq(schema.assets.id, id));
   if (!a) return null;
+  
   return {
     id: a.id,
     title: a.title,
@@ -23,7 +26,10 @@ async function getAsset(id: string): Promise<PublicAsset | null> {
     priceCents: a.priceCents,
     previewUrl: previewUrl(a.previewPublicId),
     downloadCount: a.downloadCount,
+    featured: a.featured,
     createdAt: a.createdAt.toISOString(),
+    viewCount: a.viewCount,
+    likeCount: a.likeCount,
   };
 }
 
@@ -45,6 +51,7 @@ async function getRelated(category: string, excludeId: string): Promise<PublicAs
     priceCents: a.priceCents,
     previewUrl: previewUrl(a.previewPublicId),
     downloadCount: a.downloadCount,
+    featured: a.featured,
     createdAt: a.createdAt.toISOString(),
   }));
 }
@@ -79,17 +86,39 @@ export default async function PhotoPage({ params }: { params: { id: string } }) 
 
   const related = await getRelated(asset.category, asset.id);
 
+  // Fire-and-forget server-side view increment
+  Promise.resolve().then(async () => {
+    try {
+      await db.update(schema.assets)
+        .set({ viewCount: sql`${schema.assets.viewCount} + 1` })
+        .where(eq(schema.assets.id, asset.id));
+    } catch (err) {
+      // Fail silently to not disrupt the user experience
+    }
+  });
+
   return (
     <div className="max-w-4xl mx-auto px-5 sm:px-6 py-8 sm:py-10">
       <Link href="/" className="text-sm text-ink/50 hover:text-ink transition-colors">
         ← Back to gallery
       </Link>
+      
       <div className="relative w-full aspect-[4/3] bg-black rounded-lg overflow-hidden mt-4 mb-6">
         <Image src={asset.previewUrl} alt={asset.title} fill className="object-contain" priority />
       </div>
+      
       <h1 className="font-serif text-2xl sm:text-3xl text-ink">{asset.title}</h1>
-      <p className="text-sm text-ink/50 mb-4">{asset.category}</p>
+      
+      {/* Updated Metadata Row with Views & Likes */}
+      <div className="flex items-center gap-4 mb-4 mt-1">
+        <p className="text-sm text-ink/50">{asset.category}</p>
+        <span className="text-ink/20">|</span>
+        <span className="text-ink/40 text-xs">{asset.viewCount + 1} views</span>
+        <LikeButton assetId={asset.id} initialLikes={asset.likeCount} />
+      </div>
+
       {asset.description && <p className="text-ink/70 mb-6 leading-relaxed">{asset.description}</p>}
+      
       <PurchasePanel asset={asset} />
 
       {related.length > 0 && (

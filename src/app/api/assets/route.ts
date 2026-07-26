@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
           priceCents: schema.assets.priceCents,
           previewPublicId: schema.assets.previewPublicId,
           downloadCount: schema.assets.downloadCount,
+          featured: schema.assets.featured,
           createdAt: schema.assets.createdAt,
         })
         .from(schema.assets)
@@ -37,6 +38,7 @@ export async function GET(req: NextRequest) {
           priceCents: schema.assets.priceCents,
           previewPublicId: schema.assets.previewPublicId,
           downloadCount: schema.assets.downloadCount,
+          featured: schema.assets.featured,
           createdAt: schema.assets.createdAt,
         })
         .from(schema.assets)

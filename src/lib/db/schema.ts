@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, jsonb, pgEnum, index } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, jsonb, pgEnum, index, boolean } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 
@@ -32,8 +32,15 @@ export const assets = pgTable(
     // format conversion instead of serving the real file.
     originalFormat: text("original_format").notNull().default("jpg"),
     downloadCount: integer("download_count").notNull().default(0),
+    // Admin-controlled curation for the homepage's "Selected Work" strip —
+    // deliberately independent of createdAt, so the photographer picks
+    // their strongest images rather than the homepage always just showing
+    // whatever was uploaded most recently.
+    featured: boolean("featured").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    viewCount: integer("view_count").notNull().default(0),
+    likeCount: integer("like_count").notNull().default(0),
   },
   (table) => ({
     categoryIdx: index("assets_category_idx").on(table.category),

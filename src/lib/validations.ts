@@ -13,6 +13,13 @@ export const assetMetaSchema = z.object({
   { message: "Paid assets must have a price greater than 0", path: ["priceCents"] }
 );
 
+// Separate from assetMetaSchema on purpose — the admin gallery grid
+// toggles this with one click and shouldn't need to resend the full
+// edit form (title/category/price/etc.) just to flip one flag.
+export const toggleFeaturedSchema = z.object({
+  featured: z.boolean(),
+});
+
 export const checkoutSchema = z.object({
   assetId: z.string().min(1),
   buyerEmail: z.string().email(),

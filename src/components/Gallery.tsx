@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { PublicAsset } from "@/lib/types";
 import AssetCard from "./AssetCard";
 import Lightbox from "./Lightbox";
+import Reveal from "./Reveal";
 
 export default function Gallery({ assets }: { assets: PublicAsset[] }) {
   const [category, setCategory] = useState<string | "all">("all");
@@ -40,12 +41,9 @@ export default function Gallery({ assets }: { assets: PublicAsset[] }) {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {filtered.map((asset, i) => (
-            <AssetCard
-              key={asset.id}
-              asset={asset}
-              onClick={() => setActive(asset)}
-              priority={i < 4}
-            />
+            <Reveal key={asset.id} delay={(i % 8) * 60}>
+              <AssetCard asset={asset} onClick={() => setActive(asset)} priority={i < 4} />
+            </Reveal>
           ))}
         </div>
       )}

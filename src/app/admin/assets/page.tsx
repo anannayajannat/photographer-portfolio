@@ -26,6 +26,20 @@ export default function AdminAssetsPage() {
     if (res.ok) load();
   }
 
+  async function toggleFeatured(a: PublicAsset) {
+    // Optimistic update so the star flips instantly instead of waiting on
+    // the round trip — reverted below if the request actually fails.
+    setAssets((prev) => prev?.map((x) => (x.id === a.id ? { ...x, featured: !x.featured } : x)) ?? prev);
+    const res = await fetch(`/api/assets/${a.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ featured: !a.featured }),
+    });
+    if (!res.ok) {
+      setAssets((prev) => prev?.map((x) => (x.id === a.id ? { ...x, featured: a.featured } : x)) ?? prev);
+    }
+  }
+
   const categories = useMemo(() => {
     if (!assets) return [];
     return Array.from(new Set(assets.map((a) => a.category).filter(Boolean)));
@@ -82,7 +96,7 @@ export default function AdminAssetsPage() {
         )}
 
         <span className="text-black/40 text-xs">
-          {filtered.length} of {assets.length} shown
+          {filtered.length} of {assets.length} shown · click ☆ on a photo to feature it on the homepage
         </span>
       </div>
 
@@ -106,9 +120,21 @@ export default function AdminAssetsPage() {
                 </span>
               </Link>
               <div className="p-3">
-                <Link href={`/admin/assets/${a.id}/edit`} className="text-sm font-medium truncate block hover:underline">
-                  {a.title}
-                </Link>
+                <div className="flex items-center justify-between gap-2">
+                  <Link href={`/admin/assets/${a.id}/edit`} className="text-sm font-medium truncate block hover:underline">
+                    {a.title}
+                  </Link>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleFeatured(a);
+                    }}
+                    title={a.featured ? "Remove from homepage" : "Show on homepage"}
+                    className={`shrink-0 text-base leading-none ${a.featured ? "text-amber-500" : "text-black/20 hover:text-black/40"}`}
+                  >
+                    {a.featured ? "★" : "☆"}
+                  </button>
+                </div>
                 <p className="text-xs text-black/50">
                   {a.category} · {a.pricingMode === "FREE" ? "Free" : `$${(a.priceCents / 100).toFixed(2)}`}
                 </p>

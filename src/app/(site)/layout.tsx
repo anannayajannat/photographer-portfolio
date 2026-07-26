@@ -79,6 +79,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           <Logo />
         </div>
         <div className="flex justify-center gap-6 text-xs tracking-widest text-ink/50 uppercase mb-4">
+          <Link href="/gallery" className="hover:text-ink">Gallery</Link>
           <Link href="/about" className="hover:text-ink">About</Link>
           <Link href="/services" className="hover:text-ink">Services</Link>
           <Link href="/contact" className="hover:text-ink">Contact</Link>

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { previewUrl, cloudinary } from "@/lib/cloudinary";
-import { assetMetaSchema } from "@/lib/validations";
+import { assetMetaSchema, toggleFeaturedSchema } from "@/lib/validations";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const [asset] = await db
@@ -39,6 +39,54 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const [updated] = await db
     .update(schema.assets)
     .set({ ...parsed.data, updatedAt: new Date() })
+    .where(eq(schema.assets.id, params.id))
+    .returning();
+
+  if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(updated);
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const body = await req.json();
+
+  // 1. Intercept public actions (No admin auth required)
+  if (body.action) {
+    if (body.action === "view") {
+      await db.update(schema.assets)
+        .set({ viewCount: sql`${schema.assets.viewCount} + 1` })
+        .where(eq(schema.assets.id, params.id));
+      return NextResponse.json({ success: true });
+    }
+
+    if (body.action === "like") {
+      await db.update(schema.assets)
+        .set({ likeCount: sql`${schema.assets.likeCount} + 1` })
+        .where(eq(schema.assets.id, params.id));
+      return NextResponse.json({ success: true });
+    }
+
+    if (body.action === "unlike") {
+      await db.update(schema.assets)
+        .set({ likeCount: sql`${schema.assets.likeCount} - 1` })
+        .where(eq(schema.assets.id, params.id));
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: "Invalid public action" }, { status: 400 });
+  }
+
+  // 2. Existing admin-only actions (Toggling 'featured' state)
+  const session = await requireAdmin();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const parsed = toggleFeaturedSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const [updated] = await db
+    .update(schema.assets)
+    .set({ featured: parsed.data.featured, updatedAt: new Date() })
     .where(eq(schema.assets.id, params.id))
     .returning();
 
