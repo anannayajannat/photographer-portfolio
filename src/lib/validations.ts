@@ -19,7 +19,7 @@ export const checkoutSchema = z.object({
 });
 
 export const siteContentSchema = z.object({
-  key: z.enum(["about", "contact", "services"]),
+  key: z.enum(["about", "contact", "services", "social"]),
   value: z.record(z.any()),
 });
 
