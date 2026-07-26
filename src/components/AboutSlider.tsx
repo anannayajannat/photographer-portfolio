@@ -9,7 +9,16 @@ interface AboutImageItem {
   caption: string | null;
 }
 
-export default function AboutSlider({ images }: { images: AboutImageItem[] }) {
+export default function AboutSlider({
+  images,
+  autoPlayMs,
+}: {
+  images: AboutImageItem[];
+  /** If set, auto-advances to the next slide every N ms. Any manual
+   *  navigation (arrows, dots, swipe) naturally resets the countdown,
+   *  since it's re-scheduled from the current activeIndex below. */
+  autoPlayMs?: number;
+}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -46,6 +55,17 @@ export default function AboutSlider({ images }: { images: AboutImageItem[] }) {
     if (e.key === "ArrowRight") scrollToIndex(Math.min(activeIndex + 1, images.length - 1));
     if (e.key === "ArrowLeft") scrollToIndex(Math.max(activeIndex - 1, 0));
   }
+
+  // One-shot timeout re-scheduled every time activeIndex changes (by
+  // autoplay itself, or by the user clicking/swiping) — simpler and less
+  // bug-prone than a setInterval fighting a closure over a stale index.
+  useEffect(() => {
+    if (!autoPlayMs || images.length <= 1) return;
+    const timer = setTimeout(() => {
+      scrollToIndex((activeIndex + 1) % images.length);
+    }, autoPlayMs);
+    return () => clearTimeout(timer);
+  }, [activeIndex, autoPlayMs, images.length]);
 
   if (images.length === 0) return null;
 

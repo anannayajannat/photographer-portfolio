@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and, ne, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,6 +25,28 @@ async function getAsset(id: string): Promise<PublicAsset | null> {
     downloadCount: a.downloadCount,
     createdAt: a.createdAt.toISOString(),
   };
+}
+
+async function getRelated(category: string, excludeId: string): Promise<PublicAsset[]> {
+  const rows = await db
+    .select()
+    .from(schema.assets)
+    .where(and(eq(schema.assets.category, category), ne(schema.assets.id, excludeId)))
+    .orderBy(desc(schema.assets.createdAt))
+    .limit(4);
+
+  return rows.map((a) => ({
+    id: a.id,
+    title: a.title,
+    description: a.description,
+    category: a.category,
+    tags: a.tags,
+    pricingMode: a.pricingMode,
+    priceCents: a.priceCents,
+    previewUrl: previewUrl(a.previewPublicId),
+    downloadCount: a.downloadCount,
+    createdAt: a.createdAt.toISOString(),
+  }));
 }
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
@@ -55,18 +77,51 @@ export default async function PhotoPage({ params }: { params: { id: string } }) 
   const asset = await getAsset(params.id);
   if (!asset) notFound();
 
+  const related = await getRelated(asset.category, asset.id);
+
   return (
-    <div className="max-w-4xl mx-auto px-6 py-10">
-      <Link href="/" className="text-sm text-black/50 hover:text-black">
+    <div className="max-w-4xl mx-auto px-5 sm:px-6 py-8 sm:py-10">
+      <Link href="/" className="text-sm text-ink/50 hover:text-ink transition-colors">
         ← Back to gallery
       </Link>
       <div className="relative w-full aspect-[4/3] bg-black rounded-lg overflow-hidden mt-4 mb-6">
         <Image src={asset.previewUrl} alt={asset.title} fill className="object-contain" priority />
       </div>
-      <h1 className="text-2xl font-semibold">{asset.title}</h1>
-      <p className="text-sm text-black/60 mb-4">{asset.category}</p>
-      {asset.description && <p className="text-black/70 mb-6">{asset.description}</p>}
+      <h1 className="font-serif text-2xl sm:text-3xl text-ink">{asset.title}</h1>
+      <p className="text-sm text-ink/50 mb-4">{asset.category}</p>
+      {asset.description && <p className="text-ink/70 mb-6 leading-relaxed">{asset.description}</p>}
       <PurchasePanel asset={asset} />
+
+      {related.length > 0 && (
+        <div className="mt-16 pt-10 border-t border-ink/10">
+          <p className="text-xs tracking-widest uppercase text-ink/40 mb-4">
+            More from {asset.category}
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {related.map((r) => (
+              <Link
+                key={r.id}
+                href={`/photo/${r.id}`}
+                className="group relative aspect-[4/5] overflow-hidden rounded-md bg-black/5 block"
+              >
+                <Image
+                  src={r.previewUrl}
+                  alt={r.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                  <p className="text-white text-sm font-serif truncate">{r.title}</p>
+                  <p className="text-white/70 text-xs mt-0.5">
+                    {r.pricingMode === "FREE" ? "Free" : `$${(r.priceCents / 100).toFixed(2)}`}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
