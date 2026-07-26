@@ -7,7 +7,7 @@ import AboutSlider from "@/components/AboutSlider";
 import Link from "next/link";
 import { PublicAsset } from "@/lib/types";
 
-export const dynamic = "force-dynamic"; // see README: avoids a build-time DB dependency from ISR prerendering
+export const dynamic = "force-dynamic";
 
 const mapAsset = (a: typeof schema.assets.$inferSelect): PublicAsset => ({
   id: a.id,
@@ -31,10 +31,6 @@ async function getFeaturedAssets(): Promise<PublicAsset[]> {
     .orderBy(desc(schema.assets.createdAt))
     .limit(8);
 
-  // Nothing curated yet? Fall back to the most recent uploads so the
-  // homepage is never empty before the photographer has picked favorites —
-  // but this is a fallback, not the steady state: the admin assets grid
-  // has a one-click star to mark real picks once there's a real catalog.
   if (featuredRows.length > 0) return featuredRows.map(mapAsset);
 
   const recentRows = await db.select().from(schema.assets).orderBy(desc(schema.assets.createdAt)).limit(8);
@@ -46,7 +42,7 @@ async function getContent() {
     .select()
     .from(schema.siteContent)
     .where(inArray(schema.siteContent.key, ["about", "services", "contact"]));
-  const byKey: Record<string, any> = {};
+  const byKey: Record<string, unknown> = {};
   for (const r of rows) byKey[r.key] = r.value ?? {};
   return {
     about: (byKey.about ?? {}) as { heading?: string; body?: string },
@@ -91,9 +87,7 @@ export default async function HomePage() {
         </Reveal>
       </div>
 
-      {/* Featured work — a curated strip, not the whole catalog; the full
-          collection lives on its own /gallery page (browsed, filtered,
-          without competing for space against About/Services/Contact). */}
+      {/* Featured work */}
       <div className="max-w-6xl mx-auto px-6 pb-8 scroll-mt-24">
         <FeaturedGrid assets={assets} />
       </div>
@@ -108,35 +102,60 @@ export default async function HomePage() {
         </Reveal>
       </div>
 
-      {/* About preview */}
-      <section id="about" className="border-t border-ink/10 bg-white/40 scroll-mt-16">
-        <div className="max-w-4xl mx-auto px-6 py-24 text-center">
-          <Reveal>
-            <p className="text-xs tracking-[0.3em] uppercase text-graphite mb-3">The Studio</p>
-            <h2 className="font-serif text-3xl md:text-4xl text-ink mb-5">
-              {content.about.heading ?? "About Photographer Portfolio"}
-            </h2>
-          </Reveal>
+      {/* NEW Split-Screen About Preview */}
+      <section id="about" className="border-t border-ink/10 bg-white/40 scroll-mt-16 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 py-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
+            
+            {/* Left Side: Photo Slider */}
+            <div className="order-2 md:order-1 w-full">
+              {aboutImages.length > 0 ? (
+                <Reveal>
+                  <AboutSlider images={aboutImages} />
+                </Reveal>
+              ) : (
+                <Reveal>
+                  <div className="aspect-[4/5] bg-black/5 flex items-center justify-center rounded-md">
+                    <p className="text-ink/40 text-sm">No images uploaded yet.</p>
+                  </div>
+                </Reveal>
+              )}
+            </div>
 
-          {aboutImages.length > 0 && (
-            <Reveal className="max-w-2xl mx-auto mb-8 text-left">
-              <AboutSlider images={aboutImages} autoPlayMs={4500} />
-            </Reveal>
-          )}
+            {/* Right Side: Text & Button */}
+            <div className="order-1 md:order-2 space-y-8">
+              <Reveal>
+                <div>
+                  <p className="text-xs tracking-[0.3em] uppercase text-graphite mb-3">
+                    The Studio
+                  </p>
+                  <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl text-ink leading-tight">
+                    {content.about.heading ?? "About Photographer Portfolio"}
+                  </h2>
+                </div>
+              </Reveal>
 
-          <Reveal>
-            <p className="text-ink/60 leading-relaxed max-w-2xl mx-auto mb-6">
-              {content.about.body
-                ? content.about.body.split("\n\n")[0]
-                : "A closer look at the studio, the philosophy, and the person behind the camera."}
-            </p>
-            <Link
-              href="/about"
-              className="inline-block text-xs tracking-widest uppercase text-ink hover:text-ink transition-colors border-b border-ink/40 pb-0.5"
-            >
-              Read the full story →
-            </Link>
-          </Reveal>
+              <div className="space-y-6">
+                <Reveal delay={80}>
+                  <p className="text-ink/70 leading-relaxed text-[1.05rem] font-sans">
+                    {content.about.body
+                      ? content.about.body.split("\n\n")[0]
+                      : "A closer look at the studio, the philosophy, and the person behind the camera."}
+                  </p>
+                </Reveal>
+                
+                <Reveal delay={160}>
+                  <Link
+                    href="/about"
+                    className="inline-block bg-ink text-paper px-8 py-4 text-xs tracking-[0.2em] uppercase hover:bg-graphite transition-colors duration-300"
+                  >
+                    Read the full story
+                  </Link>
+                </Reveal>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
 

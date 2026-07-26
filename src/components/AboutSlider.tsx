@@ -11,21 +11,13 @@ interface AboutImageItem {
 
 export default function AboutSlider({
   images,
-  autoPlayMs,
 }: {
   images: AboutImageItem[];
-  /** If set, auto-advances to the next slide every N ms. Any manual
-   *  navigation (arrows, dots, swipe) naturally resets the countdown,
-   *  since it's re-scheduled from the current activeIndex below. */
-  autoPlayMs?: number;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // Track which slide is centered using IntersectionObserver rather than
-  // computing it from scrollLeft — robust to scroll-snap's native momentum
-  // easing, which makes raw-position math unreliable mid-swipe.
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
@@ -47,8 +39,17 @@ export default function AboutSlider({
   }, [images.length]);
 
   function scrollToIndex(index: number) {
+    const track = trackRef.current;
     const slide = slideRefs.current[index];
-    slide?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    
+    // Use container-specific scrolling instead of scrollIntoView 
+    // to prevent the entire browser window from jumping down.
+    if (track && slide) {
+      track.scrollTo({
+        left: slide.offsetLeft,
+        behavior: "smooth"
+      });
+    }
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -56,21 +57,11 @@ export default function AboutSlider({
     if (e.key === "ArrowLeft") scrollToIndex(Math.max(activeIndex - 1, 0));
   }
 
-  // One-shot timeout re-scheduled every time activeIndex changes (by
-  // autoplay itself, or by the user clicking/swiping) — simpler and less
-  // bug-prone than a setInterval fighting a closure over a stale index.
-  useEffect(() => {
-    if (!autoPlayMs || images.length <= 1) return;
-    const timer = setTimeout(() => {
-      scrollToIndex((activeIndex + 1) % images.length);
-    }, autoPlayMs);
-    return () => clearTimeout(timer);
-  }, [activeIndex, autoPlayMs, images.length]);
-
   if (images.length === 0) return null;
 
   return (
     <div className="relative" role="region" aria-roledescription="carousel" aria-label="Studio photos">
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
       <div
         ref={trackRef}
         onKeyDown={handleKeyDown}
@@ -88,7 +79,7 @@ export default function AboutSlider({
             aria-roledescription="slide"
             aria-label={`${i + 1} of ${images.length}`}
           >
-            <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] rounded-lg overflow-hidden bg-black/5">
+            <div className="relative w-full aspect-[4/3] sm:aspect-[4/5] rounded-lg overflow-hidden bg-black/5">
               <Image
                 src={img.imageUrl}
                 alt={img.caption ?? "Studio photo"}
@@ -107,12 +98,11 @@ export default function AboutSlider({
 
       {images.length > 1 && (
         <>
-          {/* Arrow controls — hidden on the smallest screens where swipe is the primary interaction */}
           <button
             onClick={() => scrollToIndex(Math.max(activeIndex - 1, 0))}
             disabled={activeIndex === 0}
             aria-label="Previous photo"
-            className="hidden sm:flex absolute left-2 top-[calc(50%-1rem)] -translate-y-1/2 w-9 h-9 items-center justify-center rounded-full bg-paper/90 border border-ink/10 text-ink/60 hover:text-ink disabled:opacity-30 shadow-sm"
+            className="hidden sm:flex absolute left-2 top-[calc(50%-1rem)] -translate-y-1/2 w-9 h-9 items-center justify-center rounded-full bg-paper/90 border border-ink/10 text-ink/60 hover:text-ink disabled:opacity-30 shadow-sm transition-opacity"
           >
             ←
           </button>
@@ -120,7 +110,7 @@ export default function AboutSlider({
             onClick={() => scrollToIndex(Math.min(activeIndex + 1, images.length - 1))}
             disabled={activeIndex === images.length - 1}
             aria-label="Next photo"
-            className="hidden sm:flex absolute right-2 top-[calc(50%-1rem)] -translate-y-1/2 w-9 h-9 items-center justify-center rounded-full bg-paper/90 border border-ink/10 text-ink/60 hover:text-ink disabled:opacity-30 shadow-sm"
+            className="hidden sm:flex absolute right-2 top-[calc(50%-1rem)] -translate-y-1/2 w-9 h-9 items-center justify-center rounded-full bg-paper/90 border border-ink/10 text-ink/60 hover:text-ink disabled:opacity-30 shadow-sm transition-opacity"
           >
             →
           </button>
