@@ -32,7 +32,7 @@ Visit `/` for the public site, `/admin/login` for the dashboard.
 4. In Stripe Dashboard → Developers → Webhooks, add `https://<your-app>.vercel.app/api/webhooks/stripe` listening for `checkout.session.completed`, `charge.refunded`, and `checkout.session.expired`. Copy its signing secret into `STRIPE_WEBHOOK_SECRET`.
 5. Run `npm run seed` once (locally, pointed at the prod `DATABASE_URL`) to create the admin account.
 
-## Architecture decisions (why, not just what)
+## Architecture decisions
 
 - **Public preview vs. private original are two separate Cloudinary uploads.** The original is `type: authenticated` — Cloudinary refuses to serve it without a signed URL, so there's no hidden full-res link sitting in page HTML.
 - **Watermark + downscale happen server-side at upload time**, so the pixels themselves carry the watermark rather than a CSS overlay anyone can strip via dev tools.
