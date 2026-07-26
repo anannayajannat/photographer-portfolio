@@ -31,6 +31,13 @@ export const assets = pgTable(
     // guessed "jpg" for a PNG original silently triggers an unwanted
     // format conversion instead of serving the real file.
     originalFormat: text("original_format").notNull().default("jpg"),
+    // Captured from Cloudinary's upload response, not computed client-side
+    // (never trust dimensions/size the client claims about its own file).
+    // Nullable — assets uploaded before this column existed simply don't
+    // show this info rather than needing a backfill migration.
+    originalWidth: integer("original_width"),
+    originalHeight: integer("original_height"),
+    originalBytes: integer("original_bytes"),
     downloadCount: integer("download_count").notNull().default(0),
     // Admin-controlled curation for the homepage's "Selected Work" strip —
     // deliberately independent of createdAt, so the photographer picks

@@ -10,4 +10,7 @@ export interface PublicAsset {
   downloadCount: number;
   featured: boolean;
   createdAt: string;
+  originalWidth?: number | null;
+  originalHeight?: number | null;
+  originalBytes?: number | null;
 }

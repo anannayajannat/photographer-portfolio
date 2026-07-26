@@ -107,23 +107,8 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-6 py-24">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
             
-            {/* Left Side: Photo Slider */}
-            <div className="order-2 md:order-1 w-full">
-              {aboutImages.length > 0 ? (
-                <Reveal>
-                  <AboutSlider images={aboutImages} />
-                </Reveal>
-              ) : (
-                <Reveal>
-                  <div className="aspect-[4/5] bg-black/5 flex items-center justify-center rounded-md">
-                    <p className="text-ink/40 text-sm">No images uploaded yet.</p>
-                  </div>
-                </Reveal>
-              )}
-            </div>
-
-            {/* Right Side: Text & Button */}
-            <div className="order-1 md:order-2 space-y-8">
+            {/* Left Side: Text & Button */}
+            <div className="order-2 md:order-1 space-y-8">
               <Reveal>
                 <div>
                   <p className="text-xs tracking-[0.3em] uppercase text-graphite mb-3">
@@ -143,16 +128,31 @@ export default async function HomePage() {
                       : "A closer look at the studio, the philosophy, and the person behind the camera."}
                   </p>
                 </Reveal>
-                
+
                 <Reveal delay={160}>
                   <Link
                     href="/about"
-                    className="inline-block bg-ink text-paper px-8 py-4 text-xs tracking-[0.2em] uppercase hover:bg-graphite transition-colors duration-300"
+                    className="inline-block bg-ink text-paper px-7 py-3 rounded-md text-sm tracking-wide hover:bg-ink/90 transition-colors"
                   >
                     Read the full story
                   </Link>
                 </Reveal>
               </div>
+            </div>
+
+            {/* Right Side: Photo Slider */}
+            <div className="order-1 md:order-2 w-full">
+              {aboutImages.length > 0 ? (
+                <Reveal>
+                  <AboutSlider images={aboutImages} />
+                </Reveal>
+              ) : (
+                <Reveal>
+                  <div className="aspect-[4/5] bg-black/5 flex items-center justify-center rounded-md">
+                    <p className="text-ink/40 text-sm">No images uploaded yet.</p>
+                  </div>
+                </Reveal>
+              )}
             </div>
 
           </div>

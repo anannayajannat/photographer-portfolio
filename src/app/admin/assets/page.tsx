@@ -12,6 +12,12 @@ export default function AdminAssetsPage() {
   const [pricingFilter, setPricingFilter] = useState<PricingFilter>("ALL");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
 
+  const [showRename, setShowRename] = useState(false);
+  const [renameFrom, setRenameFrom] = useState("");
+  const [renameTo, setRenameTo] = useState("");
+  const [renaming, setRenaming] = useState(false);
+  const [renameMessage, setRenameMessage] = useState<string | null>(null);
+
   function load() {
     fetch("/api/assets")
       .then((r) => r.json())
@@ -37,6 +43,28 @@ export default function AdminAssetsPage() {
     });
     if (!res.ok) {
       setAssets((prev) => prev?.map((x) => (x.id === a.id ? { ...x, featured: a.featured } : x)) ?? prev);
+    }
+  }
+
+  async function handleRenameCategory() {
+    if (!renameFrom || !renameTo.trim()) return;
+    setRenaming(true);
+    setRenameMessage(null);
+    const res = await fetch("/api/assets/categories", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ from: renameFrom, to: renameTo.trim() }),
+    });
+    setRenaming(false);
+    if (res.ok) {
+      const data = await res.json();
+      setRenameMessage(`Renamed ${data.updated} photo${data.updated === 1 ? "" : "s"}.`);
+      setRenameFrom("");
+      setRenameTo("");
+      if (categoryFilter === renameFrom) setCategoryFilter("ALL");
+      load();
+    } else {
+      setRenameMessage("Rename failed — try again.");
     }
   }
 
@@ -98,7 +126,52 @@ export default function AdminAssetsPage() {
         <span className="text-black/40 text-xs">
           {filtered.length} of {assets.length} shown · click ☆ on a photo to feature it on the homepage
         </span>
+
+        {categories.length > 0 && (
+          <button
+            onClick={() => setShowRename((v) => !v)}
+            className="text-xs text-black/50 hover:text-black underline ml-auto"
+          >
+            {showRename ? "Hide" : "Rename a category"}
+          </button>
+        )}
       </div>
+
+      {showRename && (
+        <div className="flex flex-wrap items-center gap-2 mb-6 border border-black/10 rounded-lg p-3 text-sm">
+          <select
+            value={renameFrom}
+            onChange={(e) => setRenameFrom(e.target.value)}
+            className="border border-black/20 rounded-md px-2 py-1.5"
+          >
+            <option value="">Choose a category…</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <span className="text-black/30">→</span>
+          <input
+            value={renameTo}
+            onChange={(e) => setRenameTo(e.target.value)}
+            placeholder="New name"
+            className="border border-black/20 rounded-md px-2 py-1.5 flex-1 min-w-[120px]"
+          />
+          <button
+            onClick={handleRenameCategory}
+            disabled={!renameFrom || !renameTo.trim() || renaming}
+            className="bg-ink text-white px-3 py-1.5 rounded-md text-xs disabled:opacity-50"
+          >
+            {renaming ? "Renaming…" : "Rename everywhere"}
+          </button>
+          {renameMessage && <p className="text-xs text-black/50 w-full">{renameMessage}</p>}
+          <p className="text-xs text-black/40 w-full">
+            This updates every photo currently tagged with that category — useful for fixing a typo
+            from a batch upload without editing each photo one by one.
+          </p>
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <p className="text-black/50 text-sm">No assets match this filter.</p>

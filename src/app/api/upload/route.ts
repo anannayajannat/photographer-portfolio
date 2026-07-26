@@ -45,15 +45,25 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const [{ publicId: originalPublicId, format: originalFormat }, previewPublicId] =
-    await Promise.all([
-      uploadOriginal(buffer, "originals"),
-      uploadPreview(buffer, "previews"),
-    ]);
+  const [
+    { publicId: originalPublicId, format: originalFormat, width: originalWidth, height: originalHeight, bytes: originalBytes },
+    previewPublicId,
+  ] = await Promise.all([
+    uploadOriginal(buffer, "originals"),
+    uploadPreview(buffer, "previews"),
+  ]);
 
   const [asset] = await db
     .insert(schema.assets)
-    .values({ ...parsed.data, originalPublicId, originalFormat, previewPublicId })
+    .values({
+      ...parsed.data,
+      originalPublicId,
+      originalFormat,
+      originalWidth,
+      originalHeight,
+      originalBytes,
+      previewPublicId,
+    })
     .returning();
 
   return NextResponse.json(asset, { status: 201 });

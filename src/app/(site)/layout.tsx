@@ -59,11 +59,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   };
 
   return (
-    <>
+    <div data-theme-scope className="min-h-screen flex flex-col bg-paper text-ink">
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <header className="sticky top-0 z-50 h-[65px] bg-paper/80 backdrop-blur-md border-b border-ink/5 transition-all duration-300">
         <nav className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
@@ -104,6 +104,6 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           © {new Date().getFullYear()} Photographer Portfolio — All Rights Reserved
         </p>
       </footer>
-    </>
+    </div>
   );
 }

@@ -15,20 +15,28 @@ export { cloudinary };
  * itself refuses to serve it without a signed URL, so even someone with
  * the public_id cannot pull the full-res file directly.
  *
- * Returns Cloudinary's own detected `format`, not the client-supplied
- * extension/MIME — needed so signed download URLs request the file in
- * the format it's actually stored in, instead of guessing.
+ * Returns Cloudinary's own detected `format`, dimensions, and byte size —
+ * not the client-supplied extension/MIME/size, which are unverified
+ * claims about a file the client controls. This is what gets shown to
+ * buyers on the photo page so "what am I actually buying" has a real,
+ * server-verified answer instead of nothing.
  */
 export function uploadOriginal(
   buffer: Buffer,
   folder: string
-): Promise<{ publicId: string; format: string }> {
+): Promise<{ publicId: string; format: string; width: number; height: number; bytes: number }> {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder, type: "authenticated", resource_type: "image" },
       (err, result) => {
         if (err || !result) return reject(err);
-        resolve({ publicId: result.public_id, format: result.format });
+        resolve({
+          publicId: result.public_id,
+          format: result.format,
+          width: result.width,
+          height: result.height,
+          bytes: result.bytes,
+        });
       }
     );
     stream.end(buffer);

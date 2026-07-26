@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-type Key = "about" | "contact" | "services" | "social";
+type Key = "contact" | "services" | "social";
 
 interface ContentValue {
   heading?: string;
@@ -18,7 +18,6 @@ interface ContentValue {
 }
 
 const TABS: { key: Key; label: string }[] = [
-  { key: "about", label: "About" },
   { key: "contact", label: "Contact" },
   { key: "services", label: "Services intro" },
   { key: "social", label: "Social links" },
@@ -32,10 +31,10 @@ const SOCIAL_FIELDS: { key: keyof ContentValue; label: string; placeholder: stri
   { key: "x", label: "X (Twitter)", placeholder: "https://x.com/yourhandle" },
 ];
 
-const EMPTY: Record<Key, ContentValue> = { about: {}, contact: {}, services: {}, social: {} };
+const EMPTY: Record<Key, ContentValue> = { contact: {}, services: {}, social: {} };
 
 export default function AdminContentPage() {
-  const [active, setActive] = useState<Key>("about");
+  const [active, setActive] = useState<Key>("contact");
   const [values, setValues] = useState<Record<Key, ContentValue>>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -43,9 +42,13 @@ export default function AdminContentPage() {
   useEffect(() => {
     fetch("/api/content")
       .then((r) => r.json())
-      .then((rows: { key: Key; value: any }[]) => {
+      .then((rows: { key: string; value: any }[]) => {
         const next = { ...EMPTY };
-        for (const row of rows) next[row.key] = row.value ?? {};
+        for (const row of rows) {
+          if (row.key === "contact" || row.key === "services" || row.key === "social") {
+            next[row.key] = row.value ?? {};
+          }
+        }
         setValues(next);
       });
   }, []);
@@ -136,15 +139,6 @@ export default function AdminContentPage() {
             rows={6}
             className="border border-black/20 rounded-md px-3 py-2 text-sm"
           />
-          {active === "about" && (
-            <p className="text-xs text-black/40">
-              To add or manage the photo slideshow on your About page, go to{" "}
-              <Link href="/admin/about-photos" className="underline">
-                About photos
-              </Link>{" "}
-              in the sidebar.
-            </p>
-          )}
           {active === "contact" && (
             <>
               <input
